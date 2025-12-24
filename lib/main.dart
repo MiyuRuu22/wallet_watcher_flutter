@@ -29,7 +29,7 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        title: 'Wallet Watcher',
+        title: 'WalletBuddy',
         theme: ThemeData(primarySwatch: Colors.teal),
         home: const HomeScreen(),
       ),
