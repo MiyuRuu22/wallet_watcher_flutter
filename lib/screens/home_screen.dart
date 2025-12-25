@@ -12,7 +12,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final txProvider = Provider.of<TransactionProvider>(context);
-    final savings = Provider.of<SavingsProvider>(context);
+    final savingsProvider = Provider.of<SavingsProvider>(context);
 
     DateTime now = DateTime.now();
 
@@ -57,7 +57,7 @@ class HomeScreen extends StatelessWidget {
               monthly: monthlyExpenses,
             ),
             const SizedBox(height: 16),
-            _savingsOverviewCard(savings),
+            _savingsOverviewCard(savingsProvider),
             const SizedBox(height: 30),
 
             // Navigation buttons
@@ -146,52 +146,94 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // Savings Overview Card
-  Widget _savingsOverviewCard(SavingsProvider savings) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.green.withOpacity(0.3), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Savings Progress',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[700],
-              fontWeight: FontWeight.w500,
+  // Savings Overview Card (Multiple Goals)
+  Widget _savingsOverviewCard(SavingsProvider savingsProvider) {
+    final activeGoals = savingsProvider.activeGoals;
+
+    if (activeGoals.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.green.withOpacity(0.3), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.2),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
             ),
+          ],
+        ),
+        child: const Text(
+          'No active savings goals. Start one in the Savings tab!',
+          style: TextStyle(fontSize: 16, color: Colors.grey),
+        ),
+      );
+    }
+
+    return Column(
+      children: activeGoals.map((goal) {
+        final progress = goal.savedAmount / goal.goalAmount;
+        return Container(
+          width: double.infinity,
+          margin: const EdgeInsets.symmetric(vertical: 6),
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.green.withOpacity(0.3), width: 1.2),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.grey.withOpacity(0.2),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            'LKR ${savings.savedAmount.toStringAsFixed(2)} / ${savings.goal.toStringAsFixed(2)}',
-            style: const TextStyle(
-              fontSize: 18,
-              color: Colors.green,
-              fontWeight: FontWeight.bold,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                goal.title, // goal name or purpose
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.grey[800],
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'LKR ${goal.savedAmount.toStringAsFixed(2)} / ${goal.goalAmount.toStringAsFixed(2)}',
+                style: const TextStyle(
+                  fontSize: 18,
+                  color: Colors.green,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              LinearProgressIndicator(
+                value: progress,
+                backgroundColor: Colors.green[100],
+                color: Colors.green,
+                minHeight: 8,
+              ),
+              const SizedBox(height: 4),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  '${(progress * 100).toStringAsFixed(1)}%',
+                  style: TextStyle(
+                    color: Colors.grey[700],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 10),
-          LinearProgressIndicator(
-            value: savings.progress,
-            backgroundColor: Colors.green[100],
-            color: Colors.green,
-            minHeight: 8,
-          ),
-        ],
-      ),
+        );
+      }).toList(),
     );
   }
 

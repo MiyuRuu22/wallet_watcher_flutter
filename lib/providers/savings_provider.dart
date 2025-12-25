@@ -1,35 +1,72 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+
+// Model for a savings goal
+class SavingsGoal {
+  String title;
+  double goalAmount;
+  double savedAmount;
+  bool completed;
+
+  SavingsGoal({
+    required this.title,
+    required this.goalAmount,
+    this.savedAmount = 0,
+    this.completed = false,
+  });
+
+  double get progress => (savedAmount / goalAmount).clamp(0.0, 1.0);
+}
 
 class SavingsProvider with ChangeNotifier {
-  double _goal = 0;
-  double _savedAmount = 0;
+  // Active goals
+  List<SavingsGoal> _activeGoals = [];
 
-  // Getters
-  double get goal => _goal;
-  double get savedAmount => _savedAmount;
+  // Completed goals (for achievements, history, etc.)
+  List<SavingsGoal> _completedGoals = [];
 
-  // Progress as 0.0 - 1.0
-  double get progress => _goal == 0 ? 0 : _savedAmount / _goal;
+  List<SavingsGoal> get activeGoals => _activeGoals;
+  List<SavingsGoal> get completedGoals => _completedGoals;
 
-  // Set a new goal (resets saved amount)
-  void setGoal(double newGoal) {
-    if (newGoal < 0) return;
-    _goal = newGoal;
-    _savedAmount = 0;
+  // Add a new savings goal
+  void addGoal(String title, double amount) {
+    _activeGoals.add(SavingsGoal(title: title, goalAmount: amount));
     notifyListeners();
   }
 
-  // Add amount to saved
-  void addSavings(double amount) {
-    if (amount <= 0) return;
-    _savedAmount += amount;
-    if (_savedAmount > _goal) _savedAmount = _goal; // cap at goal
+  // Add money to a goal
+  void addToGoal(SavingsGoal goal, double amount) {
+    final index = _activeGoals.indexOf(goal);
+    if (index == -1) return;
+
+    _activeGoals[index].savedAmount += amount;
+
+    // Check if goal completed
+    if (_activeGoals[index].savedAmount >= _activeGoals[index].goalAmount) {
+      _activeGoals[index].completed = true;
+      _completedGoals.add(_activeGoals[index]);
+      _activeGoals.removeAt(index);
+      // TODO: Trigger achievement/animation here
+    }
+
     notifyListeners();
   }
 
-  // Reset savings
-  void resetSavings() {
-    _savedAmount = 0;
+  // Reduce money from a goal
+  void reduceFromGoal(SavingsGoal goal, double amount) {
+    final index = _activeGoals.indexOf(goal);
+    if (index == -1) return;
+
+    _activeGoals[index].savedAmount -= amount;
+    if (_activeGoals[index].savedAmount < 0) {
+      _activeGoals[index].savedAmount = 0;
+    }
+
+    notifyListeners();
+  }
+
+  // Remove a goal completely
+  void removeGoal(SavingsGoal goal) {
+    _activeGoals.remove(goal);
     notifyListeners();
   }
 }
